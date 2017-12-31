@@ -1,0 +1,9 @@
+Owner: ravand
+Name: HighlightedItems
+Repository
+
+Ignore:
+src
+.gitignore
+.gitattributes
+README.md
