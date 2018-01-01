@@ -1,9 +1,6 @@
 ﻿using PoeHUD.Models;
 using PoeHUD.Plugins;
 using PoeHUD.Poe.RemoteMemoryObjects;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using PoeHUD.Poe.Elements;
 using System.Windows.Forms;
 using HighlightedItems.Utils;
 using System.Threading;
@@ -16,8 +13,6 @@ namespace HighlightedItems
     {
         private readonly IngameState ingameState;
         private bool isBusy = false;
-        private MD5 md5Hasher = MD5.Create();
-
 
         public HighlightedItems()
         {
