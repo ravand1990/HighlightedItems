@@ -6,22 +6,26 @@ using HighlightedItems.Utils;
 using System.Threading;
 using SharpDX;
 using PoeHUD.Framework;
+using PoeHUD.Models.Enums;
 
 namespace HighlightedItems
 {
     internal class HighlightedItems : BaseSettingsPlugin<Settings>
     {
-        private readonly IngameState ingameState;
+        private IngameState ingameState;
         private bool isBusy = false;
+        private Vector2 windowOffset = new Vector2();
+
 
         public HighlightedItems()
         {
-            ingameState = GameController.Game.IngameState;
             PluginName = "HighlightedItems";
         }
 
         public override void Initialise()
         {
+            ingameState = GameController.Game.IngameState;
+            windowOffset = GameController.Window.GetWindowRectangle().TopLeft;
             base.Initialise();
         }
 
@@ -37,13 +41,13 @@ namespace HighlightedItems
                 var pickButtonRect = new RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
 
 
-                Graphics.DrawPluginImage(PluginDirectory+"\\images\\pick.png", pickButtonRect);
+                Graphics.DrawPluginImage(PluginDirectory + "\\images\\pick.png", pickButtonRect);
 
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
 
-                    if (pickButtonRect.Contains(Mouse.GetCursorPosition()))
+                    if ((pickButtonRect).Contains(Mouse.GetCursorPosition() - windowOffset))
                     {
                         isBusy = true;
                         GetHighlightedItems();
@@ -52,14 +56,13 @@ namespace HighlightedItems
                     Mouse.moveMouse(prevMousePos);
 
                 }
-                    if (WinApi.IsKeyDown(Settings.HotKey) && !isBusy)
+                if (WinApi.IsKeyDown(Settings.HotKey) && !isBusy)
                 {
                     isBusy = true;
                     GetHighlightedItems();
                     isBusy = false;
                 }
             }
-
         }
 
         public override void EntityAdded(EntityWrapper entityWrapper)
@@ -78,7 +81,7 @@ namespace HighlightedItems
             base.OnClose();
         }
 
-        
+
         public void GetHighlightedItems()
         {
             var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
@@ -94,6 +97,7 @@ namespace HighlightedItems
 
         public void moveItem(Vector2 itemPosition)
         {
+            itemPosition += windowOffset;
             Keyboard.HoldKey((byte)Keys.LControlKey);
             Thread.Sleep(Mouse.DELAY_MOVE);
             Mouse.moveMouse(itemPosition);
