@@ -6,7 +6,6 @@ using HighlightedItems.Utils;
 using System.Threading;
 using SharpDX;
 using PoeHUD.Framework;
-using PoeHUD.Models.Enums;
 
 namespace HighlightedItems
 {
@@ -87,7 +86,8 @@ namespace HighlightedItems
             var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
             foreach (var item in inventoryItems)
             {
-                if (item.isHighlighted)
+                bool isHighlighted = item.Address + 0x950 > 0;
+                if (isHighlighted)
                 {
                     moveItem(item.GetClientRect().Center);
                 }
