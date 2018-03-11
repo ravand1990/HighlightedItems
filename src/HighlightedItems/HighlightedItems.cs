@@ -86,7 +86,7 @@ namespace HighlightedItems
             var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
             foreach (var item in inventoryItems)
             {
-                bool isHighlighted = item.Address + 0x950 > 0;
+                bool isHighlighted = Memory.ReadByte(item.Address + 0x950) > 0;
                 if (isHighlighted)
                 {
                     moveItem(item.GetClientRect().Center);
