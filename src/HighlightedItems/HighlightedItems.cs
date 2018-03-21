@@ -33,10 +33,13 @@ namespace HighlightedItems
             if (!Settings.Enable)
                 return;
 
-            if (ingameState.ServerData.StashPanel.IsVisible)
+            var stashPanel = ingameState.ServerData.StashPanel;
+            if (stashPanel.IsVisible)
             {
-
-                var stashRect = ingameState.ServerData.StashPanel.VisibleStash.InventoryUiElement.GetClientRect();
+                var visibleStash = stashPanel.VisibleStash;
+                if (visibleStash == null)
+                    return;
+                var stashRect = visibleStash.InventoryUiElement.GetClientRect();
                 var pickButtonRect = new RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
 
 
