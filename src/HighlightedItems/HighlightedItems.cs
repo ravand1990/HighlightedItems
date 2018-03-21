@@ -12,7 +12,6 @@ namespace HighlightedItems
     internal class HighlightedItems : BaseSettingsPlugin<Settings>
     {
         private IngameState ingameState;
-        private bool isBusy = false;
         private Vector2 windowOffset = new Vector2();
 
 
@@ -49,40 +48,19 @@ namespace HighlightedItems
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
 
-                    if ((pickButtonRect).Contains(Mouse.GetCursorPosition() - windowOffset))
-                    {
-                        isBusy = true;
+                    if (pickButtonRect.Contains(Mouse.GetCursorPosition() - windowOffset))
                         GetHighlightedItems();
-                        isBusy = false;
-                    }
-                    Mouse.moveMouse(prevMousePos);
 
+                    Mouse.moveMouse(prevMousePos);
                 }
-                if (WinApi.IsKeyDown(Settings.HotKey) && !isBusy)
+                if (Settings.HotKey.PressedOnce())
                 {
-                    isBusy = true;
+                    var prevMousePos = Mouse.GetCursorPosition();
                     GetHighlightedItems();
-                    isBusy = false;
+                    Mouse.moveMouse(prevMousePos);
                 }
             }
         }
-
-        public override void EntityAdded(EntityWrapper entityWrapper)
-        {
-            base.EntityAdded(entityWrapper);
-        }
-
-        public override void EntityRemoved(EntityWrapper entityWrapper)
-        {
-            base.EntityRemoved(entityWrapper);
-        }
-
-        public override void OnClose()
-        {
-
-            base.OnClose();
-        }
-
 
         public void GetHighlightedItems()
         {
@@ -107,10 +85,6 @@ namespace HighlightedItems
             Mouse.LeftUp(Settings.Speed);
             Thread.Sleep(Mouse.DELAY_MOVE);
             Keyboard.ReleaseKey((byte)Keys.LControlKey);
-        }
-
-        private void debug()
-        {
         }
     }
 }
