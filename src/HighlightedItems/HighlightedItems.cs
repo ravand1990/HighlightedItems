@@ -6,6 +6,9 @@ using HighlightedItems.Utils;
 using System.Threading;
 using SharpDX;
 using PoeHUD.Framework;
+using System.Collections.Generic;
+using PoeHUD.Poe.Elements;
+using System.Drawing;
 
 namespace HighlightedItems
 {
@@ -39,41 +42,60 @@ namespace HighlightedItems
                 if (visibleStash == null)
                     return;
                 var stashRect = visibleStash.InventoryUiElement.GetClientRect();
-                var pickButtonRect = new RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
-
+                var pickButtonRect = new SharpDX.RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
 
                 Graphics.DrawPluginImage(PluginDirectory + "\\images\\pick.png", pickButtonRect);
+
+                var highlightedItems = GetHighlightedItems();
+            
+                var countText = highlightedItems.Count.ToString();
+                var countPos = pickButtonRect.Center;
+                var countDigits = highlightedItems.Count.ToString().Length;
+                SizeF size = TextRenderer.MeasureText(countText, new Font("Arial", 20)); 
+                countPos.X -= size.Width;
+                countPos.Y -= 11;
+
+                Graphics.DrawText(countText, 20, countPos);
 
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
 
-                    if (pickButtonRect.Contains(Mouse.GetCursorPosition() - windowOffset))
-                        GetHighlightedItems();
-
+                    if (pickButtonRect.Contains(Mouse.GetCursorPosition() - windowOffset)) { 
+                        foreach (var item in highlightedItems)
+                        {
+                            moveItem(item.GetClientRect().Center);
+                        }
+                    }
                     Mouse.moveMouse(prevMousePos);
                 }
                 if (Settings.HotKey.PressedOnce())
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
-                    GetHighlightedItems();
+                    foreach (var item in highlightedItems)
+                    {
+                        moveItem(item.GetClientRect().Center);
+                    }
                     Mouse.moveMouse(prevMousePos);
                 }
             }
         }
 
-        public void GetHighlightedItems()
+        public List<NormalInventoryItem> GetHighlightedItems()
         {
             var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
+            List<NormalInventoryItem> highlightedItems = new List<NormalInventoryItem>();
             foreach (var item in inventoryItems)
             {
-                bool isHighlighted = Memory.ReadByte(item.Address + 0x950) > 0;
+                bool isHighlighted = item.IsHighlighted;
                 if (isHighlighted)
                 {
-                    moveItem(item.GetClientRect().Center);
+                    highlightedItems.Add(item);
                 }
             }
+            return highlightedItems;
         }
+
 
 
         public void moveItem(Vector2 itemPosition)
