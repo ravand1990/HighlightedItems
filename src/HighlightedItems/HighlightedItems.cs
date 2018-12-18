@@ -83,16 +83,20 @@ namespace HighlightedItems
 
         public List<NormalInventoryItem> GetHighlightedItems()
         {
-            var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
             List<NormalInventoryItem> highlightedItems = new List<NormalInventoryItem>();
-            foreach (var item in inventoryItems)
+            try
             {
-                bool isHighlighted = item.IsHighlighted;
-                if (isHighlighted)
+                var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
+                foreach (var item in inventoryItems)
                 {
-                    highlightedItems.Add(item);
+                    bool isHighlighted = item.IsHighlighted;
+                    if (isHighlighted)
+                    {
+                        highlightedItems.Add(item);
+                    }
                 }
             }
+            catch (System.Exception){}
             return highlightedItems;
         }
 
