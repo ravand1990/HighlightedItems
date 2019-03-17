@@ -89,7 +89,7 @@ namespace HighlightedItems
                 var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
                 foreach (var item in inventoryItems)
                 {
-                    bool isHighlighted = item.IsHighlighted;
+                    bool isHighlighted = item.isHighlighted;
                     if (isHighlighted)
                     {
                         highlightedItems.Add(item);
