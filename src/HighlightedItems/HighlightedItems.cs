@@ -1,33 +1,35 @@
-﻿using PoeHUD.Models;
-using PoeHUD.Plugins;
-using PoeHUD.Poe.RemoteMemoryObjects;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using HighlightedItems.Utils;
 using System.Threading;
-using SharpDX;
-using PoeHUD.Framework;
+using Exile;
+using PoEMemory;
+using PoEMemory.InventoryElements;
 using System.Collections.Generic;
-using PoeHUD.Poe.Elements;
 using System.Drawing;
+using System.IO;
 
 namespace HighlightedItems
 {
-    internal class HighlightedItems : BaseSettingsPlugin<Settings>
+    public class HighlightedItems : BaseSettingsPlugin<Settings>
     {
         private IngameState ingameState;
-        private Vector2 windowOffset = new Vector2();
-
-
+        private SharpDX.Vector2 windowOffset = new SharpDX.Vector2();
+           
         public HighlightedItems()
         {
-            PluginName = "HighlightedItems";
         }
 
-        public override void Initialise()
+        public override bool Initialise()
         {
+            base.Initialise();
+            Name = "HighlightedItems";
             ingameState = GameController.Game.IngameState;
             windowOffset = GameController.Window.GetWindowRectangle().TopLeft;
-            base.Initialise();
+
+            var combine = Path.Combine(DirectoryFullName, "images\\pick.png").Replace('\\', '/');
+            Graphics.InitImage(combine, false);
+
+            return true;
         }
 
         public override void Render()
@@ -35,27 +37,27 @@ namespace HighlightedItems
             if (!Settings.Enable)
                 return;
 
-            var stashPanel = ingameState.ServerData.StashPanel;
+            var stashPanel = ingameState.IngameUi.StashElement;
             if (stashPanel.IsVisible)
             {
                 var visibleStash = stashPanel.VisibleStash;
                 if (visibleStash == null)
                     return;
-                var stashRect = visibleStash.InventoryUiElement.GetClientRect();
+                var stashRect = visibleStash.InventoryUIElement.GetClientRect();
                 var pickButtonRect = new SharpDX.RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
 
-                Graphics.DrawPluginImage(PluginDirectory + "\\images\\pick.png", pickButtonRect);
+                Graphics.DrawImage("pick.png", pickButtonRect);
 
                 var highlightedItems = GetHighlightedItems();
             
                 var countText = highlightedItems.Count.ToString();
-                var countPos = pickButtonRect.Center;
+                var  countPos = pickButtonRect.Center;
                 var countDigits = highlightedItems.Count.ToString().Length;
                 SizeF size = TextRenderer.MeasureText(countText, new Font("Arial", 20)); 
                 countPos.X -= size.Width;
                 countPos.Y -= 11;
 
-                Graphics.DrawText(countText, 20, countPos);
+                Graphics.DrawText(countText, countPos, SharpDX.Color.White);
 
                 if (Control.MouseButtons == MouseButtons.Left)
                 {
@@ -69,7 +71,7 @@ namespace HighlightedItems
                     }
                     Mouse.moveMouse(prevMousePos);
                 }
-                if (Settings.HotKey.PressedOnce())
+                if (Keyboard.IsKeyPressed(Settings.HotKey.Value))
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
                     foreach (var item in highlightedItems)
@@ -86,7 +88,7 @@ namespace HighlightedItems
             List<NormalInventoryItem> highlightedItems = new List<NormalInventoryItem>();
             try
             {
-                var inventoryItems = ingameState.ServerData.StashPanel.VisibleStash.VisibleInventoryItems;
+                var inventoryItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
                 foreach (var item in inventoryItems)
                 {
                     bool isHighlighted = item.isHighlighted;
@@ -100,17 +102,15 @@ namespace HighlightedItems
             return highlightedItems;
         }
 
-
-
-        public void moveItem(Vector2 itemPosition)
+        public void moveItem(SharpDX.Vector2 itemPosition)
         {
             itemPosition += windowOffset;
-            Keyboard.HoldKey((byte)Keys.LControlKey);
+            Keyboard.KeyDown(Keys.LControlKey);
             Thread.Sleep(Mouse.DELAY_MOVE);
             Mouse.moveMouse(itemPosition);
             Mouse.LeftUp(Settings.Speed);
             Thread.Sleep(Mouse.DELAY_MOVE);
-            Keyboard.ReleaseKey((byte)Keys.LControlKey);
+            Keyboard.KeyUp(Keys.LControlKey);
         }
     }
 }
