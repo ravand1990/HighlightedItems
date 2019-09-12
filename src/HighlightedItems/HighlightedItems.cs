@@ -1,9 +1,9 @@
 ﻿using System.Windows.Forms;
 using HighlightedItems.Utils;
 using System.Threading;
-using Exile;
-using PoEMemory;
-using PoEMemory.InventoryElements;
+using ExileCore;
+using ExileCore.PoEMemory.Elements.InventoryElements;
+using ExileCore.PoEMemory.MemoryObjects;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
