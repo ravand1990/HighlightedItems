@@ -7,6 +7,12 @@ using ExileCore.PoEMemory.MemoryObjects;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using ExileCore.Shared.Enums;
+using ImGuiNET;
+using System.Numerics;
+using System;
+using ExileCore.Shared.Nodes;
 
 namespace HighlightedItems
 {
@@ -14,7 +20,6 @@ namespace HighlightedItems
     {
         private IngameState ingameState;
         private SharpDX.Vector2 windowOffset = new SharpDX.Vector2();
-           
         public HighlightedItems()
         {
         }
@@ -26,10 +31,17 @@ namespace HighlightedItems
             ingameState = GameController.Game.IngameState;
             windowOffset = GameController.Window.GetWindowRectangle().TopLeft;
 
-            var combine = Path.Combine(DirectoryFullName, "images\\pick.png").Replace('\\', '/');
-            Graphics.InitImage(combine, false);
+            var pickBtn = Path.Combine(DirectoryFullName, "images\\pick.png").Replace('\\', '/');
+            var pickLBtn = Path.Combine(DirectoryFullName, "images\\pickL.png").Replace('\\', '/');
+            Graphics.InitImage(pickBtn, false);
+            Graphics.InitImage(pickLBtn, false);
 
             return true;
+        }
+        public override void DrawSettings()
+        {
+            base.DrawSettings();
+            this.DrawIgnoredCellsSettings();
         }
 
         public override void Render()
@@ -43,34 +55,36 @@ namespace HighlightedItems
                 var visibleStash = stashPanel.VisibleStash;
                 if (visibleStash == null)
                     return;
+
+                //Determine Stash Pickup Button position and draw
                 var stashRect = visibleStash.InventoryUIElement.GetClientRect();
                 var pickButtonRect = new SharpDX.RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
 
                 Graphics.DrawImage("pick.png", pickButtonRect);
 
                 var highlightedItems = GetHighlightedItems();
-            
+
                 var countText = highlightedItems.Count.ToString();
-                var  countPos = pickButtonRect.Center;
+                var countPos = pickButtonRect.Center;
                 var countDigits = highlightedItems.Count.ToString().Length;
-                SizeF size = TextRenderer.MeasureText(countText, new Font("Arial", 20)); 
+                SizeF size = TextRenderer.MeasureText(countText, new Font("Arial", 20));
                 countPos.X -= size.Width;
                 countPos.Y -= 11;
 
                 Graphics.DrawText(countText, countPos, SharpDX.Color.White);
 
-                if (Control.MouseButtons == MouseButtons.Left)
+                if (isButtonPressed(pickButtonRect))
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
 
-                    if (pickButtonRect.Contains(Mouse.GetCursorPosition() - windowOffset)) { 
-                        foreach (var item in highlightedItems)
-                        {
-                            moveItem(item.GetClientRect().Center);
-                        }
+                    foreach (var item in highlightedItems)
+                    {
+                        moveItem(item.GetClientRect().Center);
                     }
+
                     Mouse.moveMouse(prevMousePos);
                 }
+
                 if (Keyboard.IsKeyPressed(Settings.HotKey.Value))
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
@@ -81,6 +95,28 @@ namespace HighlightedItems
                     Mouse.moveMouse(prevMousePos);
                 }
             }
+
+            var inventoryPanel = ingameState.IngameUi.InventoryPanel;
+            var inventoryItems = inventoryPanel[InventoryIndex.PlayerInventory].VisibleInventoryItems;
+            if (inventoryPanel.IsVisible)
+            {
+                //Determine Inventory Pickup Button position and draw
+                var inventoryRect = inventoryPanel.Children[2].GetClientRect();
+                var pickButtonRect = new SharpDX.RectangleF(inventoryRect.TopLeft.X + 18, inventoryRect.TopLeft.Y - 37, 37, 37);
+
+                Graphics.DrawImage("pickL.png", pickButtonRect);
+                if (isButtonPressed(pickButtonRect))
+                {
+                    foreach (var item in inventoryItems)
+                    {
+                        if (!CheckIgnoreCells(item))
+                        {
+                            moveItem(item.GetClientRect().Center);
+                        }
+                    }
+                }
+            }
+
         }
 
         public List<NormalInventoryItem> GetHighlightedItems()
@@ -88,8 +124,14 @@ namespace HighlightedItems
             List<NormalInventoryItem> highlightedItems = new List<NormalInventoryItem>();
             try
             {
-                var inventoryItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
-                foreach (var item in inventoryItems)
+                IList<NormalInventoryItem> inventoryItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
+
+                IEnumerable<NormalInventoryItem> orderedInventoryItems = inventoryItems
+                    .Cast<NormalInventoryItem>()
+                    .OrderBy(inventoryItem => inventoryItem.InventPosX)
+                    .ThenBy(inventoryItem => inventoryItem.InventPosY);
+
+                foreach (var item in orderedInventoryItems)
                 {
                     bool isHighlighted = item.isHighlighted;
                     if (isHighlighted)
@@ -98,7 +140,7 @@ namespace HighlightedItems
                     }
                 }
             }
-            catch (System.Exception){}
+            catch (System.Exception) { }
             return highlightedItems;
         }
 
@@ -112,5 +154,63 @@ namespace HighlightedItems
             Thread.Sleep(Mouse.DELAY_MOVE);
             Keyboard.KeyUp(Keys.LControlKey);
         }
+
+        public bool isButtonPressed(SharpDX.RectangleF buttonRect)
+        {
+            if (Control.MouseButtons == MouseButtons.Left)
+            {
+                var prevMousePos = Mouse.GetCursorPosition();
+
+                if (buttonRect.Contains(Mouse.GetCursorPosition() - windowOffset))
+                {
+                    return true;
+                }
+                Mouse.moveMouse(prevMousePos);
+            }
+            return false;
+        }
+
+
+        private bool CheckIgnoreCells(NormalInventoryItem inventItem)
+        {
+            var inventPosX = inventItem.InventPosX;
+            var inventPosY = inventItem.InventPosY;
+
+            if (inventPosX < 0 || inventPosX >= 12)
+                return true;
+            if (inventPosY < 0 || inventPosY >= 5)
+                return true;
+
+            return Settings.IgnoredCells[inventPosY, inventPosX] != 0; //No need to check all item size
+        }
+
+
+
+        private void DrawIgnoredCellsSettings()
+        {
+            ImGui.BeginChild("##IgnoredCellsMain", new Vector2(ImGuiNative.igGetContentRegionAvail().X, 204f), true, (ImGuiWindowFlags)16);
+            ImGui.Text("Ignored Inventory Slots (checked = ignored)");
+
+            Vector2 contentRegionAvail = ImGuiNative.igGetContentRegionAvail();
+            ImGui.BeginChild("##IgnoredCellsCels", new Vector2(contentRegionAvail.X, contentRegionAvail.Y), true, (ImGuiWindowFlags)16);
+
+            int num = 1;
+            for (int index1 = 0; index1 < 5; ++index1)
+            {
+                for (int index2 = 0; index2 < 12; ++index2)
+                {
+                    bool boolean = Convert.ToBoolean(Settings.IgnoredCells[index1, index2]);
+                    if (ImGui.Checkbox(string.Format("##{0}IgnoredCells", (object)num), ref boolean))
+                        Settings.IgnoredCells[index1, index2] ^= 1;
+                    if ((num - 1) % 12 < 11)
+                        ImGui.SameLine();
+                    ++num;
+                }
+            }
+
+            ImGui.EndChild();
+            ImGui.EndChild();
+        }
+
     }
 }
