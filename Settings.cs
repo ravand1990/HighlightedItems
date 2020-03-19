@@ -13,7 +13,7 @@ namespace HighlightedItems
         {
             Enable = new ToggleNode(true);
             HotKey = new HotkeyNode(Keys.F1);
-            Speed = new RangeNode<int>(20, 0, 100);
+            ExtraDelay = new RangeNode<int>(20, 0, 100);
             this.IgnoredCells = new int[5, 12] {
                 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -32,8 +32,8 @@ namespace HighlightedItems
         [Menu("Hotkey")]
         public HotkeyNode HotKey { get; set; }
 
-        [Menu("Speed")]
-        public RangeNode<int> Speed { get; set; }
+        [Menu("ExtraDelay")]
+        public RangeNode<int> ExtraDelay { get; set; }
 
         public Dictionary<string, StashTabNode> FilterOptions = new Dictionary<string, StashTabNode>();
 
