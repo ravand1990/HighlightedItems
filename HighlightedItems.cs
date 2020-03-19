@@ -98,11 +98,6 @@ namespace HighlightedItems
 
             var inventoryPanel = ingameState.IngameUi.InventoryPanel;
             var inventoryItems = inventoryPanel[InventoryIndex.PlayerInventory].VisibleInventoryItems;
-            var orderedInventoryItems = inventoryItems
-                .Cast<NormalInventoryItem>()
-                .OrderBy(inventoryItem => inventoryItem.InventPosX)
-                .ThenBy(inventoryItem => inventoryItem.InventPosY);
-
             if (inventoryPanel.IsVisible)
             {
                 //Determine Inventory Pickup Button position and draw
@@ -112,7 +107,7 @@ namespace HighlightedItems
                 Graphics.DrawImage("pickL.png", pickButtonRect);
                 if (isButtonPressed(pickButtonRect))
                 {
-                    foreach (var item in orderedInventoryItems)
+                    foreach (var item in inventoryItems)
                     {
                         if (!CheckIgnoreCells(item))
                         {
@@ -153,10 +148,9 @@ namespace HighlightedItems
         {
             itemPosition += windowOffset;
             Keyboard.KeyDown(Keys.LControlKey);
-            Thread.Sleep(Mouse.DELAY_MOVE);
             Mouse.moveMouse(itemPosition);
-            Mouse.LeftUp(Settings.Speed);
-            Thread.Sleep(Mouse.DELAY_MOVE);
+            Mouse.LeftDown(Settings.ExtraDelay);
+            Mouse.LeftUp(0);
             Keyboard.KeyUp(Keys.LControlKey);
         }
 
