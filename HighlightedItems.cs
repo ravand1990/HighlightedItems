@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using HighlightedItems.Utils;
-using System.Threading;
 using ExileCore;
 using ExileCore.PoEMemory.Elements.InventoryElements;
 using ExileCore.PoEMemory.MemoryObjects;
@@ -11,8 +10,7 @@ using System.Linq;
 using ExileCore.Shared.Enums;
 using ImGuiNET;
 using System;
-using ExileCore.Shared.Nodes;
-using SharpDX;
+using System.Numerics;
 
 namespace HighlightedItems
 {
@@ -29,7 +27,7 @@ namespace HighlightedItems
             base.Initialise();
             Name = "HighlightedItems";
             ingameState = GameController.Game.IngameState;
-            windowOffset = GameController.Window.GetWindowRectangle.TopLeft;
+            windowOffset = GameController.Window.GetWindowRectangle().TopLeft;
 
             var pickBtn = Path.Combine(DirectoryFullName, "images\\pick.png").Replace('\\', '/');
             var pickLBtn = Path.Combine(DirectoryFullName, "images\\pickL.png").Replace('\\', '/');
@@ -79,7 +77,7 @@ namespace HighlightedItems
 
                     foreach (var item in highlightedItems)
                     {
-                        moveItem(item.ItemElement.GetClientRect().Center);
+                        moveItem(item.GetClientRect().Center);
                     }
 
                     Mouse.moveMouse(prevMousePos);
@@ -90,7 +88,7 @@ namespace HighlightedItems
                     var prevMousePos = Mouse.GetCursorPosition();
                     foreach (var item in highlightedItems)
                     {
-                        moveItem(item.ItemElement.GetClientRect().Center);
+                        moveItem(item.GetClientRect().Center);
                     }
                     Mouse.moveMouse(prevMousePos);
                 }
@@ -109,9 +107,9 @@ namespace HighlightedItems
                 {
                     foreach (var item in inventoryItems)
                     {
-                        if (!CheckIgnoreCells(item.ItemElement))
+                        if (!CheckIgnoreCells(item))
                         {
-                            moveItem(item.ItemElement.GetClientRect().Center);
+                            moveItem(item.GetClientRect().Center);
                         }
                     }
                 }
@@ -119,21 +117,21 @@ namespace HighlightedItems
 
         }
 
-        public List<(NormalInventoryItem ItemElement, Entity ItemEntity)> GetHighlightedItems()
+        public IList<NormalInventoryItem> GetHighlightedItems()
         {
-            List<(NormalInventoryItem ItemElement, Entity ItemEntity)> highlightedItems = new List<(NormalInventoryItem ItemElement, Entity ItemEntity)>();
+            List<NormalInventoryItem> highlightedItems = new List<NormalInventoryItem>();
             try
             {
-                List<(NormalInventoryItem ItemElement, Entity ItemEntity)> stashItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
+                IList<NormalInventoryItem> stashItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
 
-                IEnumerable<(NormalInventoryItem ItemElement, Entity ItemEntity)> orderedInventoryItems = stashItems
-                    .Cast<(NormalInventoryItem ItemElement, Entity ItemEntity)>()
-                    .OrderBy(stashItem => stashItem.ItemElement.InventPosX)
-                    .ThenBy(stashItem => stashItem.ItemElement.InventPosY);
+                IOrderedEnumerable<NormalInventoryItem> orderedInventoryItems = stashItems
+                    .Cast<NormalInventoryItem>()
+                    .OrderBy(stashItem => stashItem.InventPosX)
+                    .ThenBy(stashItem => stashItem.InventPosY);
 
                 foreach (var item in orderedInventoryItems)
                 {
-                    bool isHighlighted = item.ItemElement.IsHighlighted;
+                    bool isHighlighted = item.isHighlighted;
                     if (isHighlighted)
                     {
                         highlightedItems.Add(item);
