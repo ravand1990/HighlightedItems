@@ -10,6 +10,7 @@ using System.Linq;
 using ExileCore.Shared.Enums;
 using ImGuiNET;
 using System;
+using System.Linq.Expressions;
 using System.Numerics;
 
 namespace HighlightedItems
@@ -70,7 +71,14 @@ namespace HighlightedItems
 
                 foreach (var item in highlightedItems)
                 {
-                    count = item.Children[0] != null ? count + Int32.Parse(item.Children[0].Text) : 1;
+                    try
+                    {
+                        count += Int32.Parse(item.Children[0].Text);
+                    }
+                    catch (Exception e)
+                    {
+                        count++;
+                    }
                 }
 
                 var countText = count.ToString();
