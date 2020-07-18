@@ -71,14 +71,27 @@ namespace HighlightedItems
 
                 foreach (var item in highlightedItems)
                 {
-                    try
-                    {
-                        count += Int32.Parse(item.Children[0].Text);
-                    }
-                    catch (Exception e)
-                    {
-                        count++;
-                    }
+                    var tempCount = 0;
+                    
+                        foreach (var itemChild in item.Children)
+                        {
+                            if (itemChild.GetType().GetProperty("Text") != null)
+                            {
+                                try
+                                {
+                                    count += tempCount = Int32.Parse(itemChild.Text);
+                                    break;
+                                }
+                                catch (Exception e)
+                                {
+                                }
+                            }
+                        }
+
+                        if (tempCount == 0)
+                        {
+                            count++;
+                        }
                 }
 
                 var countText = count.ToString();
