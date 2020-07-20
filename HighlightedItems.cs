@@ -12,6 +12,7 @@ using ImGuiNET;
 using System;
 using System.Linq.Expressions;
 using System.Numerics;
+using ExileCore.PoEMemory.Components;
 
 namespace HighlightedItems
 {
@@ -66,15 +67,14 @@ namespace HighlightedItems
 
                 var highlightedItems = GetHighlightedItems();
 
-                int stackSizes = 0;
+                int? stackSizes = 0;
                 foreach (var item in highlightedItems)
                 {
-                    if (Int32.TryParse(item.Children.FirstOrDefault(x => x.Text != null)?.Text ?? null, out int sSize)) stackSizes += sSize;
-                    else stackSizes++;
+                    stackSizes += item.Item?.GetComponent<Stack>()?.Size;
                 }
 
                 string countText;
-                if (Settings.ShowStackSizes && highlightedItems.Count != stackSizes)
+                if (Settings.ShowStackSizes && highlightedItems.Count != stackSizes && stackSizes !=null)
                     if (Settings.ShowStackCountWithSize) countText = $"{stackSizes} / {highlightedItems.Count}";
                     else countText = $"{stackSizes}";
                 else
