@@ -66,70 +66,39 @@ namespace HighlightedItems
 
                 var highlightedItems = GetHighlightedItems();
 
-
-                var count = 0;
-
+                int stackSizes = 0;
                 foreach (var item in highlightedItems)
                 {
-                    var tempCount = 0;
-                    
-                        foreach (var itemChild in item.Children)
-                        {
-                            if (itemChild.GetType().GetProperty("Text") != null)
-                            {
-                                try
-                                {
-                                    count += tempCount = Int32.Parse(itemChild.Text);
-                                    break;
-                                }
-                                catch (Exception e)
-                                {
-                                }
-                            }
-                        }
-
-                        if (tempCount == 0)
-                        {
-                            count++;
-                        }
+                    if (Int32.TryParse(item.Children.FirstOrDefault(x => x.Text != null)?.Text ?? null, out int sSize)) stackSizes += sSize;
+                    else stackSizes++;
                 }
 
-                var countText = count.ToString();
-                var countPos = pickButtonRect.Center;
-                var countDigits = highlightedItems.Count.ToString().Length;
-                SizeF size = TextRenderer.MeasureText(countText, new Font("Arial", 20));
-                countPos.X -= size.Width;
+                string countText;
+                if (Settings.ShowStackSizes && highlightedItems.Count != stackSizes)
+                    if (Settings.ShowStackCountWithSize) countText = $"{stackSizes} / {highlightedItems.Count}";
+                    else countText = $"{stackSizes}";
+                else
+                    countText = $"{highlightedItems.Count}";
+
+                var countPos = new Vector2(pickButtonRect.Left - 2, pickButtonRect.Center.Y);
                 countPos.Y -= 11;
+                Graphics.DrawText($"{countText}", new Vector2(countPos.X, countPos.Y + 2), SharpDX.Color.Black, 10, "FrizQuadrataITC:22", FontAlign.Right);
+                Graphics.DrawText($"{countText}", new Vector2(countPos.X - 2, countPos.Y), SharpDX.Color.White, 10, "FrizQuadrataITC:22", FontAlign.Right);
 
-                Graphics.DrawText(countText, countPos, SharpDX.Color.White);
-
-                if (isButtonPressed(pickButtonRect))
-                {
-                    var prevMousePos = Mouse.GetCursorPosition();
-
-                    foreach (var item in highlightedItems)
-                    {
-                        moveItem(item.GetClientRect().Center);
-                    }
-
-                    Mouse.moveMouse(prevMousePos);
-                }
-
-                if (Keyboard.IsKeyPressed(Settings.HotKey.Value))
+                if (isButtonPressed(pickButtonRect) || Keyboard.IsKeyPressed(Settings.HotKey.Value))
                 {
                     var prevMousePos = Mouse.GetCursorPosition();
                     foreach (var item in highlightedItems)
                     {
                         moveItem(item.GetClientRect().Center);
                     }
-
                     Mouse.moveMouse(prevMousePos);
                 }
             }
 
             var inventoryPanel = ingameState.IngameUi.InventoryPanel;
             var inventoryItems = inventoryPanel[InventoryIndex.PlayerInventory].VisibleInventoryItems;
-            if (inventoryPanel.IsVisible)
+            if (inventoryPanel.IsVisible && Settings.DumpButtonEnable)
             {
                 //Determine Inventory Pickup Button position and draw
                 var inventoryRect = inventoryPanel.Children[2].GetClientRect();

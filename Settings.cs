@@ -12,6 +12,9 @@ namespace HighlightedItems
         public Settings()
         {
             Enable = new ToggleNode(true);
+            DumpButtonEnable = new ToggleNode(true);
+            ShowStackSizes = new ToggleNode(true);
+            ShowStackCountWithSize = new ToggleNode(true);
             HotKey = new HotkeyNode(Keys.F1);
             ExtraDelay = new RangeNode<int>(20, 0, 100);
             this.IgnoredCells = new int[5, 12] {
@@ -26,8 +29,16 @@ namespace HighlightedItems
         public int[,] IgnoredCells { get; set; }
 
 
-        [Menu("Enable")]
+        [Menu("Enable Plugin")]
         public ToggleNode Enable { get; set; }
+
+        [Menu("Dump Button Toggle")]
+        public ToggleNode DumpButtonEnable { get; set; }
+
+        [Menu("Show Stack Sizes")]
+        public ToggleNode ShowStackSizes { get; set; }
+        [Menu("Show Stack Count Next to Stack Size")]
+        public ToggleNode ShowStackCountWithSize { get; set; }
 
         [Menu("Hotkey")]
         public HotkeyNode HotKey { get; set; }
@@ -38,9 +49,6 @@ namespace HighlightedItems
         public Dictionary<string, StashTabNode> FilterOptions = new Dictionary<string, StashTabNode>();
 
         public StashTabNode CurrencyStashTab { get; set; } = new StashTabNode();
-
-
-
 
     }
 }
