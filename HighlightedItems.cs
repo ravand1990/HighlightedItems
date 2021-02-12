@@ -34,8 +34,12 @@ namespace HighlightedItems
 
             var pickBtn = Path.Combine(DirectoryFullName, "images\\pick.png").Replace('\\', '/');
             var pickLBtn = Path.Combine(DirectoryFullName, "images\\pickL.png").Replace('\\', '/');
+            var pickLBtnc = Path.Combine(DirectoryFullName, "images\\pickLc.png").Replace('\\', '/');
+            var pickLBtnnc = Path.Combine(DirectoryFullName, "images\\pickLnc.png").Replace('\\', '/');
             Graphics.InitImage(pickBtn, false);
             Graphics.InitImage(pickLBtn, false);
+            Graphics.InitImage(pickLBtnc, false);
+            Graphics.InitImage(pickLBtnnc, false);
 
             return true;
         }
@@ -60,12 +64,14 @@ namespace HighlightedItems
 
                 //Determine Stash Pickup Button position and draw
                 var stashRect = visibleStash.InventoryUIElement.GetClientRect();
-                var pickButtonRect =
-                    new SharpDX.RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
+                var pickButtonRect = new SharpDX.RectangleF(stashRect.BottomRight.X - 43, stashRect.BottomRight.Y + 10, 37, 37);
+                var pickButtonRectAll = new SharpDX.RectangleF(stashRect.BottomRight.X - 103, stashRect.BottomRight.Y + 10, 37, 37);
 
                 Graphics.DrawImage("pick.png", pickButtonRect);
+                Graphics.DrawImage("pick.png", pickButtonRectAll);
 
                 var highlightedItems = GetHighlightedItems();
+                var allStashItems = GetAllStashItems();
 
                 int? stackSizes = 0;
                 foreach (var item in highlightedItems)
@@ -91,6 +97,25 @@ namespace HighlightedItems
                     foreach (var item in highlightedItems)
                     {
                         moveItem(item.GetClientRect().Center);
+
+                    }
+                    Mouse.moveMouse(prevMousePos);
+                }
+
+
+                if (isButtonPressed(pickButtonRectAll))
+                {
+                    var prevMousePos = Mouse.GetCursorPosition();
+                    var count = 0;
+                    foreach (var item in allStashItems)
+                    {
+                        if(count > 19)
+                        {
+                            break;
+                        }
+                        moveItem(item.GetClientRect().Center);
+                        count++;
+
                     }
                     Mouse.moveMouse(prevMousePos);
                 }
@@ -102,10 +127,15 @@ namespace HighlightedItems
             {
                 //Determine Inventory Pickup Button position and draw
                 var inventoryRect = inventoryPanel.Children[2].GetClientRect();
-                var pickButtonRect =
-                    new SharpDX.RectangleF(inventoryRect.TopLeft.X + 18, inventoryRect.TopLeft.Y - 37, 37, 37);
+                var pickButtonRect = new SharpDX.RectangleF(inventoryRect.TopLeft.X + 18, inventoryRect.TopLeft.Y - 37, 37, 37);
+
+                var pickButtonRectNonCurrency = new SharpDX.RectangleF(inventoryRect.TopLeft.X + 18, inventoryRect.TopLeft.Y - 77, 37, 37);
+                var pickButtonRectOnlyCurrency = new SharpDX.RectangleF(inventoryRect.TopLeft.X + 18, inventoryRect.TopLeft.Y - 117, 37, 37);
 
                 Graphics.DrawImage("pickL.png", pickButtonRect);
+                Graphics.DrawImage("pickLnc.png", pickButtonRectNonCurrency);
+                Graphics.DrawImage("pickLc.png", pickButtonRectOnlyCurrency);
+
                 if (isButtonPressed(pickButtonRect))
                 {
                     foreach (var item in inventoryItems)
@@ -116,6 +146,31 @@ namespace HighlightedItems
                         }
                     }
                 }
+
+                if (isButtonPressed(pickButtonRectNonCurrency))
+                {
+                    foreach (var item in inventoryItems)
+                    {
+                        if (!CheckIgnoreCells(item) && !item.Item.Path.Contains("Currency"))
+                        {
+                            moveItem(item.GetClientRect().Center);
+                        }
+                    }
+                }
+
+                if (isButtonPressed(pickButtonRectOnlyCurrency))
+                {
+                    foreach (var item in inventoryItems)
+                    {
+                        if (!CheckIgnoreCells(item) && item.Item.Path.Contains("Currency"))
+                        {
+                            moveItem(item.GetClientRect().Center);
+                        }
+                    }
+                }
+
+
+
             }
         }
 
@@ -146,6 +201,25 @@ namespace HighlightedItems
             }
 
             return highlightedItems;
+        }
+
+        public IList<NormalInventoryItem> GetAllStashItems()
+        {
+            List<NormalInventoryItem> items = new List<NormalInventoryItem>();
+            try
+            {
+                IList<NormalInventoryItem> stashItems = ingameState.IngameUi.StashElement.VisibleStash.VisibleInventoryItems;
+
+                foreach (var item in stashItems)
+                {
+                        items.Add(item);
+                }
+            }
+            catch (System.Exception)
+            {
+            }
+
+            return items;
         }
 
         public void moveItem(SharpDX.Vector2 itemPosition)
