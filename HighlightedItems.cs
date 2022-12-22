@@ -65,7 +65,6 @@ namespace HighlightedItems
                 StashElement stashElement = this.ingameState.IngameUi.StashElement;
                 if (stashElement.IsVisible)
                 {
-                    this.Graphics.DrawFrame(stashElement.GetClientRect(), Color.Red, 2);
                     Inventory visibleStash = stashElement.VisibleStash;
                     if (visibleStash != null)
                     {
