@@ -25,11 +25,11 @@ namespace HighlightedItems.Utils
         public static extern bool SetCursorPos(int x, int y);
 
         [DllImport("user32.dll")]
-        public static extern bool GetCursorPos(out Point lpPoint);
+        public static extern bool GetCursorPos(out SharpDX.Point lpPoint);
 
-        public static Point GetCursorPosition()
+        public static SharpDX.Point GetCursorPosition()
         {
-            Point lpPoint;
+            SharpDX.Point lpPoint;
             GetCursorPos(out lpPoint);
 
             return lpPoint;
